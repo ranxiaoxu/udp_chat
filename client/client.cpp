@@ -9,23 +9,30 @@ static void print_log(const char* err,const char *fun,int line)
 udp_client::udp_client(const std::string _ip,const int _port)
 	:ip(_ip)
 	,port(_port)
-{
-	init();
-}
+{}
 int udp_client::init()
 {
-	sock = socket(AF_INET,SOCK_DGRAM,0);
+	sock = socket(AF_INET,SOCK_STREAM,0);
 	if(sock < 0){
 		print_log("socket",__FUNCTION__,__LINE__);
 		return 1;
 	}
+
+	server.sin_family = AF_INET;
+	server.sin_port = htons(atoi(ip.c_str()));
+	server.sin_addr.s_addr = inet_addr(ip.c_str());
+
+	if(connect(sock,(struct sockaddr *)&server,sizeof(server)) < 0){
+		std::cout<<"connect"<<std::endl;
+		return 2;
+	}
+	std::cout<<"BBBBBBBBBBBBBBB"<<std::endl;
 }
 int udp_client::recv_data(std::string &out)
 {
 	char buf[SIZE];
-	struct sockaddr_in remote;
-	socklen_t len = sizeof(remote);
-	ssize_t _s = recvfrom(sock,buf,sizeof(buf)-1,0,(struct sockaddr*)&remote,&len);
+	socklen_t len = sizeof(server);
+	ssize_t _s = recvfrom(sock,buf,sizeof(buf)-1,0,(struct sockaddr*)&server,&len);
 	if(_s > 0){
 		buf[_s] = '\0';
 		out = buf;
@@ -35,14 +42,8 @@ int udp_client::recv_data(std::string &out)
 }
 int udp_client::send_data(std::string &in)
 {
-	struct sockaddr_in server;
-	server.sin_family = AF_INET;
-	server.sin_port = htons(port);
-	server.sin_addr.s_addr = inet_addr(ip.c_str());
-
 	socklen_t len = sizeof(server);
 	ssize_t _s = sendto(sock,in.c_str(),in.size(),0,(struct sockaddr *)&server,len);
-	std::cout<<_s<<std::endl;
 	if(_s < 0)
 		print_log("send_data",__FUNCTION__,__LINE__);
 	return _s;

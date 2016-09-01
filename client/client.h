@@ -24,6 +24,7 @@ class udp_client{
 		int sock;
 		std::string ip;
 		int port;
+		struct sockaddr_in server;
 	public:
 		std::vector<std::string> flist;
 		bool is_friend_exist(const std::string &f);

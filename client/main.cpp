@@ -1,5 +1,6 @@
 #include"client.h"
 #include<pthread.h>
+#include<signal.h>
 
 typedef struct client_info{
 	public:
@@ -11,22 +12,23 @@ typedef struct client_info{
 
 cinfo c_info;
 
-static void quit(int sig)
-{
-	udp_client *clip = c_info.cli;
-
-	udp_data data;
-	data.nick_name = c_info.nick_name;
-	data.school = c_info.school;
-	data.msg = "None";
-	data.type = "QUIT";
-
-	std::string str;
-	data.to_string(str);
-
-	clip->send_data(str);
-	exit(0);
-}
+//static void quit()
+//{
+//	udp_client *clip = c_info.cli;
+//
+//	udp_data data;
+//	data.nick_name = c_info.nick_name;
+//	data.school = c_info.school;
+//	data.msg = "None";
+//	data.type = "QUIT";
+//
+//	std::string str;
+//	data.to_string(str);
+//
+//	clip->send_data(str);
+//	cwindow::~cwindow();
+//	exit(0);
+//}
 
 static void Usage(const char *proc)
 {
@@ -83,9 +85,11 @@ void *run_output_flist(void *arg)
 
 		if(data.msg != "QUIT")
 			clip->add_friend(friends);
-		else 
+		else{ 
 			clip->del_friend(friends);
-
+			if(clip->flist.size() == 0)
+				 raise(2);
+		}
 		user += "#";
 		user += data.msg;
 
@@ -157,6 +161,7 @@ int main(int argc,char *argv[])
 	std::cin>>c_info.school;
 
 	udp_client net(argv[1],atoi(argv[2]));
+	net.init();
 	cwindow win;
 
 	c_info.cli = &net;
